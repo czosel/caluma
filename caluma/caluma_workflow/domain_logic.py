@@ -93,7 +93,7 @@ class CompleteWorkItemLogic:
         ).exists()
 
     @staticmethod
-    def validate_for_complete(data, work_item, user):
+    def validate_for_complete(work_item, user):
         validators.WorkItemValidator().validate(
             status=work_item.status,
             child_case=work_item.child_case,
@@ -102,8 +102,6 @@ class CompleteWorkItemLogic:
             document=work_item.document,
             user=user,
         )
-
-        return data
 
     @staticmethod
     def pre_complete(validated_data, user):
@@ -114,6 +112,7 @@ class CompleteWorkItemLogic:
 
         return validated_data
 
+    @staticmethod
     def post_complete(work_item, user):
         case = work_item.case
 
@@ -136,13 +135,15 @@ class CompleteWorkItemLogic:
 
             tasks = models.Task.objects.filter(pk__in=result)
 
-            work_items = utils.bulk_create_work_items(tasks, case, user, work_item)
+            created_work_items = utils.bulk_create_work_items(
+                tasks, case, user, work_item
+            )
 
-            for work_item in work_items:  # pragma: no cover
+            for created_work_item in created_work_items:  # pragma: no cover
                 send_event(
                     events.created_work_item,
                     sender="post_complete_work_item",
-                    work_item=work_item,
+                    work_item=created_work_item,
                 )
         else:
             # no more tasks, mark case as complete
@@ -166,11 +167,9 @@ class CompleteWorkItemLogic:
 
 class SkipWorkItemLogic:
     @staticmethod
-    def validate_for_skip(data, work_item):
+    def validate_for_skip(work_item):
         if work_item.status != models.WorkItem.STATUS_READY:
             raise ValidationError("Only READY work items can be skipped")
-
-        return data
 
     @staticmethod
     def pre_skip(validated_data, user):

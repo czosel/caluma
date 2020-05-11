@@ -39,3 +39,47 @@ def start_case(
     case = models.Case.objects.create(**validated_data)
 
     return domain_logic.StartCaseLogic.post_start(case, user, parent_work_item)
+
+
+def complete_work_item(work_item: models.WorkItem, user: BaseUser) -> models.WorkItem:
+    """
+    Complete a work item (just like `completeWorkItem`).
+
+    Usage example:
+    ```py
+    complete_work_item(
+        work_item=models.WorkItem.first(),
+        user=AnonymousUser()
+    )
+    ```
+    """
+    domain_logic.CompleteWorkItemLogic.validate_for_complete(work_item, user)
+    validated_data = domain_logic.CompleteWorkItemLogic.pre_complete({}, user)
+
+    models.WorkItem.objects.filter(pk=work_item.pk).update(**validated_data)
+
+    domain_logic.CompleteWorkItemLogic.post_complete(work_item, user)
+
+    return work_item
+
+
+def skip_work_item(work_item: models.WorkItem, user: BaseUser) -> models.WorkItem:
+    """
+    Skip a work item (just like `SkipWorkItem`).
+
+    Usage example:
+    ```py
+    skip_work_item(
+        work_item=models.WorkItem.first(),
+        user=AnonymousUser()
+    )
+    """
+    domain_logic.SkipWorkItemLogic.validate_for_skip(work_item)
+
+    validated_data = domain_logic.SkipWorkItemLogic.pre_skip({}, user)
+
+    models.WorkItem.objects.filter(pk=work_item.pk).update(**validated_data)
+
+    domain_logic.SkipWorkItemLogic.post_skip(work_item, user)
+
+    return work_item

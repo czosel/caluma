@@ -262,7 +262,7 @@ class CompleteWorkItemSerializer(serializers.ModelSerializer):
     def validate(self, data):
         try:
             domain_logic.CompleteWorkItemLogic.validate_for_complete(
-                data, self.instance, self.context["request"].user
+                self.instance, self.context["request"].user
             )
         except ValidationError as e:
             raise exceptions.ValidationError(str(e))
