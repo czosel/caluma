@@ -292,7 +292,7 @@ class SkipWorkItemSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         try:
-            domain_logic.SkipWorkItemLogic.validate_for_skip(data, self.instance)
+            domain_logic.SkipWorkItemLogic.validate_for_skip(self.instance)
         except ValidationError as e:
             raise exceptions.ValidationError(str(e))
 
